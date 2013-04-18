@@ -75,10 +75,44 @@ namespace SoftwareDebuggingTool
 		{
 			trayiconMenuItemUsers.MenuItems.Clear();
 
+			var contextMenuForUser = this.Resources["contextmenuUserItem"] as ContextMenu;
+			if (contextMenuForUser == null)
+			{
+				UserMessages.ShowWarningMessage("Cannot find 'contextmenuUserItem'.");
+				return;
+			}
 			foreach (var user in usersList)
 			{
 				var userMenu = trayiconMenuItemUsers.MenuItems.Add(user.Name);
-				//userMenu.MenuItems.Add("Explore to local
+				for (int i = 0; i < contextMenuForUser.Items.Count; i++)
+				{
+					var mi = contextMenuForUser.Items[i] as MenuItem;
+					if (mi == null)
+					{
+						var separator = contextMenuForUser.Items[i] as Separator;
+						if (separator != null)
+							userMenu.MenuItems.Add("-");
+						continue;
+					}
+
+					var subItem = userMenu.MenuItems.Add(
+						mi.Header.ToString(),
+						(sn, ev) =>
+						{
+							var tmpClickedMenuItem = sn as System.Windows.Forms.MenuItem;
+							if (tmpClickedMenuItem != null)
+							{
+								var wpfMenuItemAndUseritem = tmpClickedMenuItem.Tag as TempMenuitemAndUseritem;
+								if (wpfMenuItemAndUseritem != null)
+								{
+									wpfMenuItemAndUseritem.menuItem.DataContext = wpfMenuItemAndUseritem.userItem;
+									wpfMenuItemAndUseritem.menuItem.RaiseEvent(
+										new RoutedEventArgs(MenuItem.ClickEvent, wpfMenuItemAndUseritem.userItem));
+								}
+							}
+						});
+					subItem.Tag = new TempMenuitemAndUseritem(mi, user);
+				}
 			}
 		}
 
@@ -92,7 +126,15 @@ namespace SoftwareDebuggingTool
 
 		private void Border_MouseLeftButtonDown_1(object sender, MouseButtonEventArgs e)
 		{
-			MessageBox.Show("Border clicked");
+			dockpanelCurrentUser.Visibility = System.Windows.Visibility.Hidden;
+			dockpanelCurrentUser.DataContext = null;
+			WPFHelper.DoActionIfObtainedItemFromObjectSender<AppUser>(sender,
+				user =>
+				{
+					dockpanelCurrentUser.DataContext = user;
+					dockpanelCurrentUser.Visibility = System.Windows.Visibility.Visible;
+				});
+			//UserMessages.ShowInfoMessage("Border clicked");
 		}
 
 		private void menuitemAbout_Click(object sender, RoutedEventArgs e)
@@ -139,10 +181,28 @@ namespace SoftwareDebuggingTool
 				user => user.Copy32bitRTestDllToShared());
 		}
 
-		private void menuitemCopyAppInterfaceXmlToShared_Click(object sender, RoutedEventArgs e)
+		private void menuitemCopy64bitRTestDllToShared_Click(object sender, RoutedEventArgs e)
 		{
 			WPFHelper.DoActionIfObtainedItemFromObjectSender<AppUser>(sender,
-				   user => user.CopyXmlInterfaceToShared());
+				user => user.Copy64bitRTestDllToShared());
+		}
+
+		private void menuitemCopyAppInterfaceXmlTo32bitShared_Click(object sender, RoutedEventArgs e)
+		{
+			WPFHelper.DoActionIfObtainedItemFromObjectSender<AppUser>(sender,
+				   user => user.CopyXmlInterfaceTo32bitShared());
+		}
+
+		private void menuitemCopyAppInterfaceXmlTo64bitShared_Click(object sender, RoutedEventArgs e)
+		{
+			WPFHelper.DoActionIfObtainedItemFromObjectSender<AppUser>(sender,
+				   user => user.CopyXmlInterfaceTo64bitShared());
+		}
+
+		private void menuitemTidyUpLocalAndSharedFolders_Click(object sender, RoutedEventArgs e)
+		{
+			WPFHelper.DoActionIfObtainedItemFromObjectSender<AppUser>(sender,
+				   user => user.TidyUpLocalAndSharedFoldersNow());
 		}
 
 		private void OnNotificationArayIconMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -170,6 +230,34 @@ namespace SoftwareDebuggingTool
 		private void OnMenuItemExitClick(object sender, EventArgs e)
 		{
 			this.Close();
+		}
+
+		private void buttonAddUser_Click(object sender, RoutedEventArgs e)
+		{
+			var newUsername = InputBoxWPF.Prompt("Please enter the user's name.", "Username required");
+			if (newUsername == null) return;
+			var newApp = new AppUser(newUsername);
+			if (UserMessages.Confirm(string.Format("Create the local folder for user '{0}'?", newUsername), "Create local folder"))
+				newApp.EnsureLocalFolderExists();
+			if (UserMessages.Confirm(string.Format("Create the shared folder for user '{0}'?", newUsername), "Create shared folder"))
+				newApp.EnsureSharedFolderExists();
+			usersList.Add(newApp);
+		}
+
+		private void Button_Click_1(object sender, RoutedEventArgs e)
+		{
+			UserMessages.ShowInfoMessage("No functionality yet for this button.");
+		}
+	}
+
+	public class TempMenuitemAndUseritem
+	{
+		public MenuItem menuItem;
+		public AppUser userItem;
+		public TempMenuitemAndUseritem(MenuItem menuItem, AppUser userItem)
+		{
+			this.menuItem = menuItem;
+			this.userItem = userItem;
 		}
 	}
 }

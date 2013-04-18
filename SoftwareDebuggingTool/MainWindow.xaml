@@ -7,6 +7,7 @@
         Title='{x:Static local:AppUser.cApplicationName}'
         Icon='app.ico'
         FontFamily='Comic Sans MS'
+        FontSize='20'
         Height='676.575'
         Width='1019'
         WindowStartupLocation='CenterScreen'
@@ -15,6 +16,16 @@
     <Window.Resources>
         <sharedclasses:BooleanToOpacityConverter x:Key='booleanToOpacityConverter' />
         <sharedclasses:BooleanToVisibilityConverter x:Key='booleanToVisibilityConverter' />
+        <LinearGradientBrush x:Key='listboxBorderBackgroundBrush'
+                             StartPoint='0,0'
+                             EndPoint='0,1'>
+            <GradientStop Offset='0'
+                          Color='#333' />
+            <GradientStop Offset='0.6'
+                          Color='#444' />
+            <GradientStop Offset='1'
+                          Color='#333' />
+        </LinearGradientBrush>
         <LinearGradientBrush x:Key='mainItemBackgroundBrush'
                              StartPoint='0,0'
                              EndPoint='0,1'>
@@ -24,6 +35,16 @@
                           Color='#efefef' />
             <GradientStop Offset='1'
                           Color='#ddd' />
+        </LinearGradientBrush>
+        <LinearGradientBrush x:Key='currentUserDockPanelBackgroundBrush'
+                             StartPoint='0,0'
+                             EndPoint='0,1'>
+            <GradientStop Offset='0'
+                          Color='#ded' />
+            <GradientStop Offset='0.6'
+                          Color='#efffef' />
+            <GradientStop Offset='1'
+                          Color='#ded' />
         </LinearGradientBrush>
         <ContextMenu x:Key='contextmenuUserItem'>
             <MenuItem Header='Explore to local folder'
@@ -41,8 +62,15 @@
             <Separator />
             <MenuItem Header='Copy 32bit Rtest DLL to Shared'
                       Click='menuitemCopy32bitRTestDllToShared_Click' />
-            <MenuItem Header='Copy app Interface XML to Shared'
-                      Click='menuitemCopyAppInterfaceXmlToShared_Click' />
+            <MenuItem Header='Copy 64bit Rtest DLL to Shared'
+                      Click='menuitemCopy64bitRTestDllToShared_Click' />
+            <MenuItem Header='Copy app Interface XML to 32bit Shared'
+                      Click='menuitemCopyAppInterfaceXmlTo32bitShared_Click' />
+            <MenuItem Header='Copy app Interface XML to 64bit Shared'
+                      Click='menuitemCopyAppInterfaceXmlTo64bitShared_Click' />
+            <Separator />
+            <MenuItem Header='Tidy up local and shared folders'
+                      Click='menuitemTidyUpLocalAndSharedFolders_Click' />
         </ContextMenu>
     </Window.Resources>
     <Window.ContextMenu>
@@ -54,10 +82,11 @@
                       Click='menuitemExit_Click' />
         </ContextMenu>
     </Window.ContextMenu>
-    <Grid Margin='15'>
+    <Grid Margin='10'>
         <Grid.RowDefinitions>
             <RowDefinition Height='auto' />
             <RowDefinition />
+            <RowDefinition Height='150' />
         </Grid.RowDefinitions>
         <sharedclasses:NotificationAreaIcon x:Name='trayIcon'
                                             Text='Software Debugging Tool'
@@ -69,7 +98,7 @@
                                 DefaultItem='True' />
                 <forms:MenuItem Text='-' />
                 <forms:MenuItem Text='Users'
-                                x:Name='trayiconMenuItemUsers'/>
+                                x:Name='trayiconMenuItemUsers' />
                 <forms:MenuItem Text='-' />
                 <forms:MenuItem Text='About'
                                 Click='OnMenuItemAboutClick' />
@@ -81,21 +110,24 @@
         <DockPanel Grid.Column='0'
                    Grid.Row='0'
                    LastChildFill='True'>
-            <Button DockPanel.Dock='Left'
+            <Button DockPanel.Dock='Right'
                     Content='Add user'
                     FontSize='30'
                     Background='Transparent'
                     Foreground='Green'
                     VerticalAlignment='Center'
-                    HorizontalAlignment='Right' />
+                    HorizontalAlignment='Right'
+                    Click='buttonAddUser_Click' />
             <StackPanel Orientation='Vertical'
                         VerticalAlignment='Center'
-                        HorizontalAlignment='Right'>
+                        HorizontalAlignment='Left'>
                 <Label Padding='0'
+                       FontSize='10'
                        Foreground='#aaa'
                        Content='{x:Static local:AppUser.cSharedFoldersRoot}'
                        ContentStringFormat='Shared root: {0}' />
                 <Label Padding='0 2 0 0'
+                       FontSize='10'
                        Foreground='#aaa'
                        Content='{x:Static local:AppUser.cLocalFoldersRoot}'
                        ContentStringFormat='Local root: {0}' />
@@ -104,76 +136,84 @@
         <DockPanel Grid.Column='0'
                    Grid.Row='1'
                    LastChildFill='True'>
-            <ListBox Name='listboxUsers'
-                     BorderThickness='0'
-                     Margin='0 30 0 0'>
-                <ListBox.Resources>
-                    <Style TargetType='ListBoxItem'>
-                        <Setter Property='Focusable'
-                                Value='False' />
-                        <Setter Property='VerticalAlignment'
-                                Value='Top' />
-                    </Style>
-                </ListBox.Resources>
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel Width='{Binding (FrameworkElement.ActualWidth),RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}' />
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Border BorderThickness='1'
-                                BorderBrush='#777'
-                                CornerRadius='5'
-                                Padding='8'
-                                Margin='10'
-                                Background='{StaticResource mainItemBackgroundBrush}'
-                                MouseLeftButtonDown='Border_MouseLeftButtonDown_1'
-                                ContextMenu='{DynamicResource contextmenuUserItem}'>
-                            <!--<Border.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header='Explore to local folder'
-                                              Visibility='{Binding HasLocalFolder, Converter={StaticResource booleanToVisibilityConverter}}'
-                                              Click='menuitemExploreToLocalFolder_Click' />
-                                    <MenuItem Header='Create local folder'
-                                              Visibility='{Binding HasLocalFolder, Converter={StaticResource booleanToVisibilityConverter}, ConverterParameter=opposite}'
-                                              Click='menuitemCreateLocalFolder_Click' />
-                                    <MenuItem Header='Explore to shared folder'
-                                              Visibility='{Binding HasSharedFolder, Converter={StaticResource booleanToVisibilityConverter}}'
-                                              Click='menuitemExploreToSharedFolder_Click' />
-                                    <MenuItem Header='Create shared folder'
-                                              Visibility='{Binding HasSharedFolder, Converter={StaticResource booleanToVisibilityConverter}, ConverterParameter=opposite}'
-                                              Click='menuitemCreateSharedFolder_Click' />
-                                    <Separator />
-                                    <MenuItem Header='Copy 32bit Rtest DLL to Shared'
-                                              Click='menuitemCopy32bitRTestDllToShared_Click' />
-                                    <MenuItem Header='Copy app Interface XML to Shared'
-                                              Click='menuitemCopyAppInterfaceXmlToShared_Click' />
-                                </ContextMenu>
-                            </Border.ContextMenu>-->
-                            <DockPanel LastChildFill='True'>
-                                <TextBlock DockPanel.Dock='Top'
-                                           Text='{Binding Name}'
-                                           HorizontalAlignment='Center'
-                                           FontSize='30' />
-                                <StackPanel DockPanel.Dock='Top'
-                                            HorizontalAlignment='Center'
-                                            Orientation='Horizontal'>
-                                    <Image Source='Icons/LocalFolder.ico'
-                                           Width='32'
-                                           Opacity='{Binding HasLocalFolder, Converter={StaticResource booleanToOpacityConverter}}' />
-                                    <Image Source='Icons/SharedFolder.ico'
-                                           Width='32'
-                                           Opacity='{Binding HasSharedFolder, Converter={StaticResource booleanToOpacityConverter}}' />
-                                </StackPanel>
-                                <Image Width='128'
-                                       Margin='0 10 0 0'
-                                       Source='{Binding PhotoFile}' />
-                            </DockPanel>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <Border BorderThickness='1'
+                    BorderBrush='#ddd'
+                    CornerRadius='10'
+                    Background='{StaticResource listboxBorderBackgroundBrush}'
+                    Padding='10'
+                    Margin='0 30 0 0'>
+                <ListBox Name='listboxUsers'
+                         BorderThickness='0'
+                         Background='Transparent'>
+                    <ListBox.Resources>
+                        <Style TargetType='ListBoxItem'>
+                            <Setter Property='Focusable'
+                                    Value='False' />
+                            <Setter Property='VerticalAlignment'
+                                    Value='Top' />
+                        </Style>
+                    </ListBox.Resources>
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Width='{Binding (FrameworkElement.ActualWidth),RelativeSource={RelativeSource AncestorType=ScrollContentPresenter}}' />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderThickness='1'
+                                    BorderBrush='#777'
+                                    CornerRadius='5'
+                                    Padding='8'
+                                    Margin='10'
+                                    Background='{StaticResource mainItemBackgroundBrush}'
+                                    MouseLeftButtonDown='Border_MouseLeftButtonDown_1'
+                                    ContextMenu='{DynamicResource contextmenuUserItem}'>
+                                <DockPanel LastChildFill='True'>
+                                    <TextBlock DockPanel.Dock='Top'
+                                               Text='{Binding Name}'
+                                               HorizontalAlignment='Center'
+                                               FontSize='30' />
+                                    <StackPanel DockPanel.Dock='Top'
+                                                HorizontalAlignment='Center'
+                                                Orientation='Horizontal'>
+                                        <Image Source='Icons/LocalFolder.ico'
+                                               Width='32'
+                                               Opacity='{Binding HasLocalFolder, Converter={StaticResource booleanToOpacityConverter}}' />
+                                        <Image Source='Icons/SharedFolder.ico'
+                                               Width='32'
+                                               Opacity='{Binding HasSharedFolder, Converter={StaticResource booleanToOpacityConverter}}' />
+                                    </StackPanel>
+                                    <Image Width='128'
+                                           Margin='0 10 0 0'
+                                           Source='{Binding PhotoFile}' />
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
         </DockPanel>
+        <Border Grid.Column='0'
+                Grid.Row='2'
+                Margin='0 10 0 0'
+                BorderThickness='1'
+                BorderBrush='#080'
+                CornerRadius='10'
+                Padding='10'
+                Background='{StaticResource currentUserDockPanelBackgroundBrush}'>
+            <DockPanel Name='dockpanelCurrentUser'
+                       LastChildFill='True'
+                       Visibility='Hidden'
+                       VerticalAlignment='Center'>
+                <StackPanel Orientation='Vertical'
+                            HorizontalAlignment='Left'>
+                    <Button Content='{Binding Name}'
+                            Click='Button_Click_1'/>
+                    <Image Width='64'
+                           Margin='0 10 0 0'
+                           Source='{Binding PhotoFile}' />
+                </StackPanel>
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>

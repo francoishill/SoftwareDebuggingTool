@@ -17,6 +17,8 @@ namespace SoftwareDebuggingTool
 		{
 			base.OnStartup(e);
 
+			System.Windows.Forms.Application.EnableVisualStyles();
+
 			SharedClasses.AutoUpdating.CheckForUpdates_ExceptionHandler();
 			//SharedClasses.AutoUpdating.CheckForUpdates(null, null, true);
 

@@ -9,7 +9,7 @@
         FontFamily='Comic Sans MS'
         FontSize='14'
         Height='837.575'
-        Width='1019'
+        Width='1172'
         WindowStartupLocation='CenterScreen'
         Loaded='Window_Loaded_1'
         StateChanged='Window_StateChanged_1'
@@ -88,8 +88,8 @@
     </Window.ContextMenu>
     <Grid Margin='10'>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition />
+            <ColumnDefinition Width='3*' />
+            <ColumnDefinition Width='2*' />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height='auto' />

@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -22,6 +23,8 @@ namespace SoftwareDebuggingTool
 	/// </summary>
 	public partial class MainWindow : Window
 	{
+		private const string cThisAppName = "SoftwareDebuggingTool";
+
 		private ObservableCollection<AppUser> usersList = new ObservableCollection<AppUser>();
 		private System.Windows.WindowState? stateBeforeMinimized = null;
 
@@ -57,6 +60,38 @@ namespace SoftwareDebuggingTool
 				usersList.Add(new AppUser(foldername));
 
 			listboxUsers.ItemsSource = usersList;
+		}
+
+		protected override void OnSourceInitialized(EventArgs e)
+		{
+			base.OnSourceInitialized(e);
+			HwndSource source = PresentationSource.FromVisual(this) as HwndSource;
+			source.AddHook(WndProc);
+
+			var thisWindowHandle = this.GetWindowHandle();
+			if (Win32Api.TryToRegisterAHotkey(cThisAppName, thisWindowHandle, Win32Api.Hotkey1, Win32Api.MOD_WIN, (int)System.Windows.Forms.Keys.Z))
+			{
+				trayIcon.ToolTip = "Hotkey: WinKey + Z";
+				trayIcon.BalloonTipClicked += delegate
+				{
+					//StopShowingHiddenToTrayMessages();
+				};
+			}
+		}
+
+		private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+		{
+			if (msg == Win32Api.WM_HOTKEY)
+			{
+				if (wParam == new IntPtr(Win32Api.Hotkey1))
+				{
+					if (this.IsVisible && this.IsActive)
+						this.Hide();
+					else
+						this.ForceBringWindowToFrontAndActivate();
+				}
+			}
+			return IntPtr.Zero;
 		}
 
 		private void HideWindow()
@@ -126,15 +161,12 @@ namespace SoftwareDebuggingTool
 
 		private void Border_MouseLeftButtonDown_1(object sender, MouseButtonEventArgs e)
 		{
-			dockpanelCurrentUser.Visibility = System.Windows.Visibility.Hidden;
-			dockpanelCurrentUser.DataContext = null;
+			dockPanelCurrentUser.Visibility = System.Windows.Visibility.Visible;
 			WPFHelper.DoActionIfObtainedItemFromObjectSender<AppUser>(sender,
 				user =>
 				{
-					dockpanelCurrentUser.DataContext = user;
-					dockpanelCurrentUser.Visibility = System.Windows.Visibility.Visible;
+					user.IsSelected = true;
 				});
-			//UserMessages.ShowInfoMessage("Border clicked");
 		}
 
 		private void menuitemAbout_Click(object sender, RoutedEventArgs e)
@@ -244,9 +276,51 @@ namespace SoftwareDebuggingTool
 			usersList.Add(newApp);
 		}
 
-		private void Button_Click_1(object sender, RoutedEventArgs e)
+		private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
 		{
-			UserMessages.ShowInfoMessage("No functionality yet for this button.");
+			//findUserWindow.textboxFindText.RaiseEvent(
+			//	new KeyEventArgs(
+			//		Keyboard.PrimaryDevice,
+			//		PresentationSource.FromVisual(findUserWindow.textboxFindText),
+			//		0,
+			//		e.Key) { RoutedEvent = Keyboard.KeyDownEvent });
+		}
+
+		private void Window_PreviewKeyUp(object sender, KeyEventArgs e)
+		{
+			try
+			{
+				//findUserWindow.textboxFindText.RaiseEvent(
+				//	new KeyEventArgs(
+				//		Keyboard.PrimaryDevice,
+				//		PresentationSource.FromVisual(findUserWindow.textboxFindText),
+				//		0,
+				//		e.Key) { RoutedEvent = Keyboard.KeyUpEvent});
+
+				//var keyString = e.Key.ToString();
+				//if (keyString.Length == 1 && char.IsLetter(e.Key.ToString()[0]))//Allow pressing any letter
+				//{					
+				//	findUserWindow.textboxFindText.Text += keyString[0];
+				//	UpdateUserFilter();
+				//}
+				//else if (e.Key == Key.Back)
+				//{
+				//	if (!string.IsNullOrEmpty(findUserWindow.textboxFindText.Text))
+				//		findUserWindow.textboxFindText.Text = findUserWindow.textboxFindText.Text.Substring(0, findUserWindow.textboxFindText.Text.Length - 1);
+				//	UpdateUserFilter();
+				//}
+			}
+			catch { }
+		}
+
+		private void UpdateUserFilter()
+		{
+			//if (findUserWindow == null)
+			//	return;
+
+			//string filterText = findUserWindow.textboxFindText.Text;
+			//for (int i = 0; i < usersList.Count; i++)
+			//	usersList[i].IsVisible = usersList[i].Name.IndexOf(filterText, StringComparison.InvariantCultureIgnoreCase) != -1;
 		}
 	}
 

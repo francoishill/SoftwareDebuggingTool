@@ -29,12 +29,25 @@ namespace SoftwareDebuggingTool
 		public static readonly string cSharedFoldersRoot = SettingsSimple.SoftwareDebuggingTool.Instance.SharedFoldersRoot;//@"R:\Francois\Debug";
 		public static readonly string cLocalFoldersRoot = SettingsSimple.SoftwareDebuggingTool.Instance.LocalFoldersRoot;//@"C:\Programming\Wadiso6\Debug data";
 
+		private bool _isVisible;
+		public bool IsVisible { get { return _isVisible; } set { _isVisible = value; OnPropertyChanged(u => u.IsVisible); } }
+
+		private bool _isSelected;
+		public bool IsSelected { get { return _isSelected; } set { _isSelected = value; OnPropertyChanged(u => u.IsSelected); } }
+
 		public string Name { get; private set; }
 		public string PhotoFile { get; private set; }
 		public bool HasLocalFolder { get { return Directory.Exists(GetLocalFolderPath()); } }
 		public bool HasSharedFolder { get { return Directory.Exists(GetSharedFolderPath()); } }
 
+		private AppUser()
+		{
+			this._isSelected = false;
+			this._isVisible = true;
+		}
+
 		public AppUser(string Name)
+			: this()
 		{
 			this.Name = Name;
 			this.CheckIfHasPhotoFile();

@@ -50,6 +50,8 @@ namespace SoftwareDebuggingTool
 			if (this.WindowState != System.Windows.WindowState.Minimized)
 				stateBeforeMinimized = this.WindowState;
 
+			this.WindowState = System.Windows.WindowState.Minimized;
+
 			var folderNames = 
 				Directory.GetDirectories(AppUser.cLocalFoldersRoot).Select(dir => Path.GetFileName(dir))
 				.Concat(Directory.GetDirectories(AppUser.cSharedFoldersRoot).Select(dir => Path.GetFileName(dir)))
@@ -88,7 +90,10 @@ namespace SoftwareDebuggingTool
 					if (this.IsVisible && this.IsActive)
 						this.Hide();
 					else
+					{
+						this.ShowWindow();
 						this.ForceBringWindowToFrontAndActivate();
+					}
 				}
 			}
 			return IntPtr.Zero;

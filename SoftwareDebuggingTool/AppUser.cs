@@ -21,8 +21,8 @@ namespace SoftwareDebuggingTool
 		private const string cTodaysFoldernameDateFormat = "yyyy-MM-dd";
 		private const string c32bitSubfolder = @"32bit_ProgramFiles_x86";
 		private const string c64bitSubfolder = @"64bit_ProgramFiles";
-		private const string cRootBinaries32bitDir = @"C:\devKiln\build_albion\tundra-output\win32-baked-rtest-default";
-		private const string cRootBinaries64bitDir = @"C:\devKiln\build_albion\tundra-output\win64-baked-rtest-default";
+		private const string cRootBinaries32bitDir = @"C:\devKiln\build_albion\tundra-output\win32-2012-rtest-default";//win32-baked-rtest-default
+		private const string cRootBinaries64bitDir = @"C:\devKiln\build_albion\tundra-output\win64-2012-rtest-default";//win64-baked-rtest-default
 
 		public static readonly string cApplicationName = SettingsSimple.SoftwareDebuggingTool.Instance.ApplicationName;
 		public static readonly int cApplicationVersion = SettingsSimple.SoftwareDebuggingTool.Instance.ApplicationVersion;
